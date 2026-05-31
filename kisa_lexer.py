@@ -56,6 +56,27 @@ class TokenType(Enum):
     ВОЗВРАТ = auto()
     ВЫЗОВ = auto()
     
+    # Команды для игр
+    ИГРА = auto()
+    СЦЕНА = auto()
+    ОБЪЕКТ = auto()
+    СОБЫТИЕ = auto()
+    ДВИЖЕНИЕ = auto()
+    СТОЛКНОВЕНИЕ = auto()
+    НАЧИСЛИ = auto()
+    ОБНОВИ = auto()
+    
+    # Атрибуты игр
+    ШИРИНА = auto()
+    ВЫСОТА = auto()
+    ЦВЕТ = auto()
+    ПОЗИЦИЯ = auto()
+    СКОРОСТЬ = auto()
+    РАЗМЕР = auto()
+    ИЗОБРАЖЕНИЕ = auto()
+    ХОД = auto()
+    СЦЕНАРИЙ = auto()
+    
     # Литералы и идентификаторы
     СТРОКА = auto()
     ЧИСЛО_ЛИТ = auto()
@@ -135,6 +156,25 @@ class Lexer:
             'параметры': TokenType.ПАРАМЕТРЫ,
             'возврат': TokenType.ВОЗВРАТ,
             'вызов': TokenType.ВЫЗОВ,
+            # Команды для игр
+            'игра': TokenType.ИГРА,
+            'сцена': TokenType.СЦЕНА,
+            'объект': TokenType.ОБЪЕКТ,
+            'событие': TokenType.СОБЫТИЕ,
+            'движение': TokenType.ДВИЖЕНИЕ,
+            'столкновение': TokenType.СТОЛКНОВЕНИЕ,
+            'начисли': TokenType.НАЧИСЛИ,
+            'обнови': TokenType.ОБНОВИ,
+            # Атрибуты
+            'ширина': TokenType.ШИРИНА,
+            'высота': TokenType.ВЫСОТА,
+            'цвет': TokenType.ЦВЕТ,
+            'позиция': TokenType.ПОЗИЦИЯ,
+            'скорость': TokenType.СКОРОСТЬ,
+            'размер': TokenType.РАЗМЕР,
+            'изображение': TokenType.ИЗОБРАЖЕНИЕ,
+            'ход': TokenType.ХОД,
+            'сценарий': TokenType.СЦЕНАРИЙ,
         }
     
     def current_char(self) -> Optional[str]:
