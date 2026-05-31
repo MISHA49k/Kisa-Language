@@ -1,5 +1,5 @@
 """
-Лексический анализатор для языка Kisa
+Обновленный лексический анализатор для языка Kisa
 Преобразует исходный код в токены
 """
 
@@ -10,7 +10,7 @@ from typing import List, Optional
 
 
 class TokenType(Enum):
-    # Ключевые слова
+    # Ключевые слова команд
     ВЫВЕДИ = auto()
     РАСПОЗНАТЬ = auto()
     СДЕЛАЙ = auto()
@@ -26,9 +26,39 @@ class TokenType(Enum):
     САЙТ = auto()
     ССЫЛКА = auto()
     
+    # Новые команды для регистрации
+    ПОКАЗАТЬ = auto()
+    ЗАГОЛОВОК = auto()
+    ПРОЧИТАТЬ = auto()
+    ПЕРЕМЕННАЯ = auto()
+    СКРЫТЫЙ = auto()
+    ПРОВЕРИТЬ = auto()
+    ДЛИНА = auto()
+    БОЛЬШЕ = auto()
+    МЕНЬШЕ = auto()
+    РАВНО = auto()
+    СОХРАНИТЬ = auto()
+    В = auto()
+    ФАЙЛ = auto()
+    ЕСЛИ = auto()
+    ВСЕ_ПРОВЕРЕНО = auto()
+    ИНАЧЕ = auto()
+    КОНЕЦ = auto()
+    ОШИБКА = auto()
+    СООБЩЕНИЕ = auto()
+    ЧИСЛО = auto()
+    ПЛЮС = auto()
+    МИНУС = auto()
+    УМНОЖИТЬ = auto()
+    РАЗДЕЛИТЬ = auto()
+    ФУНКЦИЯ = auto()
+    ПАРАМЕТРЫ = auto()
+    ВОЗВРАТ = auto()
+    ВЫЗОВ = auto()
+    
     # Литералы и идентификаторы
     СТРОКА = auto()
-    ЧИСЛО = auto()
+    ЧИСЛО_ЛИТ = auto()
     ИДЕНТИФИКАТОР = auto()
     
     # Операторы и разделители
@@ -37,6 +67,8 @@ class TokenType(Enum):
     ЗАПЯТАЯ = auto()
     СКОБКА_ОТКРЫВ = auto()
     СКОБКА_ЗАКРЫВ = auto()
+    ФИГУРНАЯ_ОТКРЫВ = auto()
+    ФИГУРНАЯ_ЗАКРЫВ = auto()
     
     # Специальные
     EOF = auto()
@@ -75,6 +107,34 @@ class Lexer:
             'нажатии': TokenType.НАЖАТИИ,
             'сайт': TokenType.САЙТ,
             'ссылка': TokenType.ССЫЛКА,
+            'показать': TokenType.ПОКАЗАТЬ,
+            'заголовок': TokenType.ЗАГОЛОВОК,
+            'прочитать': TokenType.ПРОЧИТАТЬ,
+            'переменная': TokenType.ПЕРЕМЕННАЯ,
+            'скрытый': TokenType.СКРЫТЫЙ,
+            'проверить': TokenType.ПРОВЕРИТЬ,
+            'длина': TokenType.ДЛИНА,
+            'больше': TokenType.БОЛЬШЕ,
+            'меньше': TokenType.МЕНЬШЕ,
+            'равно': TokenType.РАВНО,
+            'сохранить': TokenType.СОХРАНИТЬ,
+            'в': TokenType.В,
+            'файл': TokenType.ФАЙЛ,
+            'если': TokenType.ЕСЛИ,
+            'все_проверено': TokenType.ВСЕ_ПРОВЕРЕНО,
+            'иначе': TokenType.ИНАЧЕ,
+            'конец': TokenType.КОНЕЦ,
+            'ошибка': TokenType.ОШИБКА,
+            'сообщение': TokenType.СООБЩЕНИЕ,
+            'число': TokenType.ЧИСЛО,
+            'плюс': TokenType.ПЛЮС,
+            'минус': TokenType.МИНУС,
+            'умножить': TokenType.УМНОЖИТЬ,
+            'разделить': TokenType.РАЗДЕЛИТЬ,
+            'функция': TokenType.ФУНКЦИЯ,
+            'параметры': TokenType.ПАРАМЕТРЫ,
+            'возврат': TokenType.ВОЗВРАТ,
+            'вызов': TokenType.ВЫЗОВ,
         }
     
     def current_char(self) -> Optional[str]:
@@ -168,7 +228,7 @@ class Lexer:
             # Числа
             elif char.isdigit():
                 value = self.read_number()
-                self.tokens.append(Token(TokenType.ЧИСЛО, value, line, column))
+                self.tokens.append(Token(TokenType.ЧИСЛО_ЛИТ, value, line, column))
             
             # Идентификаторы и ключевые слова
             elif char.isalpha() or char == '_':
@@ -191,6 +251,12 @@ class Lexer:
                 self.advance()
             elif char == ')':
                 self.tokens.append(Token(TokenType.СКОБКА_ЗАКРЫВ, ')', line, column))
+                self.advance()
+            elif char == '{':
+                self.tokens.append(Token(TokenType.ФИГУРНАЯ_ОТКРЫВ, '{', line, column))
+                self.advance()
+            elif char == '}':
+                self.tokens.append(Token(TokenType.ФИГУРНАЯ_ЗАКРЫВ, '}', line, column))
                 self.advance()
             else:
                 self.tokens.append(Token(TokenType.НЕИЗВЕСТНЫЙ, char, line, column))
