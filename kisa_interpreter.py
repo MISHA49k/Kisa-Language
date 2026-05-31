@@ -1,6 +1,6 @@
 """
 Обновленный интерпретатор для языка Kisa
-Исполняет AST команды с поддержкой регистрации
+Исполняет AST команды с поддержкой игровых функций
 """
 
 import json
@@ -11,7 +11,8 @@ from kisa_parser import (
     Program, VyveliCommand, RaspoznatCommand, SdelaiCommand, 
     PokzatCommand, ProchitatCommand, PeremennaiaCommand, ProveritCommand,
     EsliCommand, SohranitCommand, FunkciaCommand, VyzvovCommand, VozvrtatCommand,
-    parse_code
+    IgraCommand, ScenaCommand, ObjectCommand, EventCommand, NachisliCommand,
+    ObnoviCommand, parse_code
 )
 
 
@@ -24,6 +25,17 @@ class KisaInterpreter:
         self.functions: Dict[str, FunkciaCommand] = {}
         self.checks: Dict[str, bool] = {}
         self.last_check_result = True
+        
+        # Игровые переменные
+        self.game_state: Dict[str, Any] = {
+            'name': '',
+            'width': 800,
+            'height': 600,
+            'scenes': {},
+            'objects': {},
+            'stats': {},
+            'events': {}
+        }
     
     def execute(self, program: Program) -> str:
         """Исполняет программу и возвращает результат"""
@@ -52,6 +64,19 @@ class KisaInterpreter:
                 self.execute_vyzov(command)
             elif isinstance(command, VozvrtatCommand):
                 self.execute_vozvrtat(command)
+            # Игровые команды
+            elif isinstance(command, IgraCommand):
+                self.execute_igra(command)
+            elif isinstance(command, ScenaCommand):
+                self.execute_scena(command)
+            elif isinstance(command, ObjectCommand):
+                self.execute_object(command)
+            elif isinstance(command, EventCommand):
+                self.execute_event(command)
+            elif isinstance(command, NachisliCommand):
+                self.execute_nachisli(command)
+            elif isinstance(command, ObnoviCommand):
+                self.execute_update(command)
         
         return self.get_output()
     
@@ -156,13 +181,11 @@ class KisaInterpreter:
     
     def execute_esli(self, command: EsliCommand):
         """Выполняет команду если"""
-        # Простая обработка условия
         condition_met = False
         
         if "все_проверено" in command.condition:
             condition_met = all(self.checks.values()) if self.checks else True
         else:
-            # Общее условие
             condition_met = self.last_check_result
         
         if condition_met:
@@ -205,6 +228,89 @@ class KisaInterpreter:
         """Выполняет команду возврат"""
         pass  # Будет реализовано позже
     
+    # ============= ИГРОВЫЕ КОМАНДЫ =============
+    
+    def execute_igra(self, command: IgraCommand):
+        """Выполняет команду игра - инициализирует игру"""
+        self.game_state['name'] = command.name
+        self.game_state['width'] = command.width
+        self.game_state['height'] = command.height
+        
+        msg = f"🎮 Игра '{command.name}' инициализирована ({command.width}x{command.height})"
+        self.console_output.append(msg)
+        print(msg)
+    
+    def execute_scena(self, command: ScenaCommand):
+        """Выполняет команду сцена - добавляет сцену в игру"""
+        self.game_state['scenes'][command.scene_name] = {
+            'commands': command.scenario_commands,
+            'objects': []
+        }
+        
+        msg = f"📍 Сцена '{command.scene_name}' создана"
+        self.console_output.append(msg)
+        print(msg)
+        
+        # Выполняем сценарий сцены
+        for cmd in command.scenario_commands:
+            self.execute(Program([cmd]))
+    
+    def execute_object(self, command: ObjectCommand):
+        """Выполняет команду объект - создает игровой объект"""
+        obj = {
+            'name': command.object_name,
+            'type': command.object_type,
+            'properties': command.properties
+        }
+        
+        self.game_state['objects'][command.object_name] = obj
+        
+        props_str = ", ".join([f"{k}={v}" for k, v in command.properties.items()])
+        msg = f"🎯 Объект '{command.object_name}' создан ({props_str})"
+        self.console_output.append(msg)
+        print(msg)
+    
+    def execute_event(self, command: EventCommand):
+        """Выполняет команду событие - добавляет обработчик события"""
+        event_key = f"{command.event_type}:{command.event_trigger}"
+        self.game_state['events'][event_key] = command
+        
+        msg = f"⚡ Событие '{event_key}' зарегистрировано"
+        self.console_output.append(msg)
+        print(msg)
+    
+    def execute_nachisli(self, command: NachisliCommand):
+        """Выполняет команду начисли - увеличивает/уменьшает статистику"""
+        if command.stat_type not in self.game_state['stats']:
+            self.game_state['stats'][command.stat_type] = 0
+        
+        if command.operation == "плюс":
+            self.game_state['stats'][command.stat_type] += command.value
+        elif command.operation == "минус":
+            self.game_state['stats'][command.stat_type] -= command.value
+        
+        current_value = self.game_state['stats'][command.stat_type]
+        op_symbol = "+" if command.operation == "плюс" else "-"
+        msg = f"📊 {command.stat_type}: {op_symbol}{command.value} (текущее значение: {current_value})"
+        self.console_output.append(msg)
+        print(msg)
+    
+    def execute_update(self, command: ObnoviCommand):
+        """Выполняет команду обнови - обновляет свойства объекта"""
+        if command.object_name in self.game_state['objects']:
+            obj = self.game_state['objects'][command.object_name]
+            for key, value in command.updates.items():
+                obj['properties'][key] = value
+            
+            updates_str = ", ".join([f"{k}={v}" for k, v in command.updates.items()])
+            msg = f"🔄 Объект '{command.object_name}' обновлен ({updates_str})"
+            self.console_output.append(msg)
+            print(msg)
+        else:
+            error_msg = f"✗ Объект '{command.object_name}' не найден"
+            self.console_output.append(error_msg)
+            print(error_msg)
+    
     def get_output(self) -> str:
         """Возвращает полный вывод программы"""
         result = []
@@ -216,6 +322,17 @@ class KisaInterpreter:
             result.append("\n=== HTML Output ===")
             result.extend(self.html_output)
         
+        # Добавляем информацию об игре если она создана
+        if self.game_state['name']:
+            result.append("\n=== Состояние игры ===")
+            result.append(f"Название: {self.game_state['name']}")
+            result.append(f"Размер: {self.game_state['width']}x{self.game_state['height']}")
+            
+            if self.game_state['objects']:
+                result.append(f"Объектов: {len(self.game_state['objects'])}")
+            if self.game_state['stats']:
+                result.append(f"Статистика: {self.game_state['stats']}")
+        
         return "\n".join(result)
     
     def set_variable(self, name: str, value: Any):
@@ -225,6 +342,10 @@ class KisaInterpreter:
     def get_variable(self, name: str) -> Any:
         """Получает значение переменной"""
         return self.variables.get(name)
+    
+    def get_game_state(self) -> Dict[str, Any]:
+        """Возвращает состояние игры"""
+        return self.game_state
 
 
 def run_kisa_code(code: str) -> str:
@@ -240,10 +361,14 @@ def run_kisa_code(code: str) -> str:
 # Пример использования
 if __name__ == "__main__":
     example_code = """
-выведи тип:текст Привет.
-распознать тип:имя как текст.
-выведи тип:текст Привет, (имя).
+игра название:"Моя первая игра" ширина:800 высота:600.
+объект герой позиция:(100,100) размер:(50,50) цвет:синий.
+начисли очки плюс:10.
+показать сообщение Игра запущена успешно.
     """
     
     result = run_kisa_code(example_code)
+    print("\n" + "="*50)
+    print("РЕЗУЛЬТАТ ВЫПОЛНЕНИЯ:")
+    print("="*50)
     print(result)
